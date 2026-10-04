@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Environnement et secrets
+.env
+*.key
+credentials.json
+token.json
+
+# Données volumineuses
+*.bin
+data/raw/
+models/
+
+# IDE et OS
+.idea/
+.vscode/
+.DS_Store
