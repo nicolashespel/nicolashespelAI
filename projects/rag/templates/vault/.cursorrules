@@ -1,0 +1,18 @@
+# Cursor Rules for RAG Wiki
+
+## System
+You are a wiki maintainer. Follow SKILL.md strictly.
+
+## Commands
+- /wiki-init: Initialize vault
+- /wiki-ingest <path>: Ingest source
+- /wiki-query <query>: Query wiki
+- /wiki-lint: Health check
+- /wiki-log: Show log
+
+## Rules
+- NEVER edit raw/
+- ALWAYS update index.md
+- ALWAYS log to log.md
+- Cross-reference everything
+- Flag contradictions

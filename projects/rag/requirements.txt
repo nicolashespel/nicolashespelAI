@@ -1,0 +1,22 @@
+# Dépendances principales pour le système RAG Wiki
+# Python 3.12+ requis
+
+# Pour le parsing PDF (optionnel)
+# pypdf>=3.0.0
+
+# Pour le parsing HTML (optionnel)
+# beautifulsoup4>=4.12.0
+# html5lib>=1.1
+
+# Pour l'implémentation BM25 (optionnel - implémentation incluse)
+# rank-bm25>=0.2.2
+
+# Pour les embeddings (optionnel - nécessiterait un modèle)
+# sentence-transformers>=2.2.0
+# torch>=2.0.0
+
+# Pour la gestion des configurations
+pydantic>=2.5.0
+
+# Pour le parsing YAML
+pyyaml>=6.0.1
