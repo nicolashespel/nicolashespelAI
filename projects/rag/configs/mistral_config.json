@@ -1,12 +1,13 @@
 {
-  "version": "1.0.0",
-  "description": "Configuration optimisée pour Mistral API - RAG Wiki System",
+  "version": "1.1.0",
+  "description": "Configuration optimisée pour Mistral API - RAG Wiki System (Mise à jour 05/10/2026)",
   
   "global": {
     "api_base_url": "https://api.mistral.ai/v1",
     "timeout_seconds": 120,
     "max_retries": 3,
-    "rate_limit_delay": 1.0
+    "rate_limit_delay": 1.0,
+    "organization_id": null
   },
   
   "llm": {
@@ -43,36 +44,39 @@
       "model": "mistral-small-latest",
       "temperature": 0.0,
       "max_tokens": 1024,
-      "description": "Modèle pour le préprocessing - besoin de déterminisme total"
+      "description": "Modèle pour le prétraitement - besoin de déterminisme total"
+    },
+    "moderation": {
+      "model": "shieldstral-latest",
+      "temperature": 0.0,
+      "max_tokens": 512,
+      "description": "Modèle de modération pour filtrer le contenu inapproprié"
     }
   },
   
   "embeddings": {
-    "model": "mistral-embed",
+    "model": "codestral-embed",
     "dimension": 1024,
     "batch_size": 32,
-    "description": "Modèle d'embedding Mistral pour la recherche sémantique"
+    "description": "Modèle d'embedding Mistral pour la recherche sémantique (codestral-embed)"
   },
   
   "ocr": {
     "primary": {
       "engine": "mistral-ocr",
       "model": "mistral-ocr-latest",
-      "enabled": false,
-      "description": "OCR via Mistral API (à activer quand disponible)"
-    },
-    "fallback": {
-      "engine": "pytesseract",
-      "lang": "fra+eng",
-      "config": "--psm 6",
       "enabled": true,
-      "description": "OCR local avec Tesseract (solution de secours)"
+      "description": "OCR via Mistral API - DISPONIBLE (05/10/2026)",
+      "api_endpoint": "/ocr",
+      "max_file_size_mb": 100,
+      "supported_formats": ["pdf", "png", "jpg", "jpeg", "gif", "bmp", "webp"]
     },
-    "pdf": {
-      "engine": "pypdf",
-      "extract_images": true,
-      "dpi": 300,
-      "description": "Extraction de texte et images depuis les PDF"
+    "image_description": {
+      "enabled": true,
+      "model": "mistral-small-latest",
+      "max_tokens": 512,
+      "temperature": 0.3,
+      "description": "Génère des descriptions contextuelles des images dans les documents"
     },
     "cleanup": {
       "remove_headers": true,
@@ -111,44 +115,50 @@
       "enabled": true,
       "max_tokens_per_chunk": 2000,
       "overlap_tokens": 200,
-      "preserve_important": ["titles", "authors", "dates", "citations", "formulas"],
+      "preserve_important": ["titles", "authors", "dates", "citations", "formulas", "code"],
       "description": "Découpe le texte en chunks optimisés pour le LLM"
     },
     "validation": {
       "check_quality": true,
       "min_content_length": 500,
       "warn_if_short": true,
-      "description": "Valide que le contenu préprocessé est suffisant"
+      "description": "Valide que le contenu prétraité est suffisant"
     }
   },
   
   "agents": {
-    "WikiIngestor": {
-      "llm_model": "mistral-large-latest",
-      "temperature": 0.2,
-      "max_tokens": 16384,
-      "embedding_model": "mistral-embed",
-      "description": "Agent d'ingestion - besoin de précision et de mémoire"
-    },
-    "WikiLibrarian": {
-      "llm_model": "mistral-large-latest",
-      "temperature": 0.4,
-      "max_tokens": 4096,
-      "embedding_model": "mistral-embed",
-      "description": "Agent de requête - équilibre précision/créativité"
-    },
-    "WikiLinter": {
-      "llm_model": "mistral-small-latest",
-      "temperature": 0.1,
-      "max_tokens": 2048,
-      "description": "Agent de linting - besoin de déterminisme"
+    "OCRAgent": {
+      "model": "mistral-ocr-latest",
+      "description": "Agent dédié à l'OCR via Mistral API"
     },
     "PreprocessingAgent": {
       "llm_model": "mistral-small-latest",
       "temperature": 0.0,
       "max_tokens": 1024,
-      "ocr_engine": "pytesseract",
-      "description": "Agent de préprocessing - déterminisme total"
+      "description": "Agent de prétraitement - nettoyage, déduplication, structuration"
+    },
+    "WikiIngestorAgent": {
+      "llm_model": "mistral-large-latest",
+      "temperature": 0.2,
+      "max_tokens": 16384,
+      "embedding_model": "codestral-embed",
+      "ocr_agent": "OCRAgent",
+      "preprocessing_agent": "PreprocessingAgent",
+      "description": "Agent d'ingestion - OCR + prétraitement + création de pages"
+    },
+    "WikiLibrarianAgent": {
+      "llm_model": "mistral-large-latest",
+      "temperature": 0.4,
+      "max_tokens": 4096,
+      "embedding_model": "codestral-embed",
+      "description": "Agent de requête - recherche + synthèse avec embeddings"
+    },
+    "WikiLinterAgent": {
+      "llm_model": "mistral-small-latest",
+      "temperature": 0.1,
+      "max_tokens": 2048,
+      "moderation_model": "shieldstral-latest",
+      "description": "Agent de linting - vérification + corrections"
     },
     "OpenWebUIAgent": {
       "llm_model": "mistral-large-latest",
@@ -158,17 +168,54 @@
     }
   },
   
+  "retrieval": {
+    "default_retriever": "hybrid",
+    "bm25": {
+      "k1": 1.5,
+      "b": 0.75,
+      "top_k": 50
+    },
+    "embeddings": {
+      "model": "codestral-embed",
+      "top_k": 10,
+      "similarity_threshold": 0.7
+    },
+    "hybrid": {
+      "enabled": true,
+      "method": "rrf",
+      "rrf_k": 60,
+      "description": "Fusion des résultats BM25 et embeddings via Reciprocal Rank Fusion"
+    }
+  },
+  
+  "moderation": {
+    "enabled": true,
+    "model": "shieldstral-latest",
+    "block_list": [
+      "hate",
+      "harassment",
+      "violence",
+      "self-harm",
+      "sexual",
+      "illegal",
+      "personal_data"
+    ],
+    "action": "filter",
+    "description": "Filtre le contenu inapproprié via Shieldstral"
+  },
+  
   "cost_optimization": {
     "track_usage": true,
     "warn_on_cost": true,
     "max_daily_cost": 10.0,
     "cost_per_1k_tokens_input": 0.0000015,
     "cost_per_1k_tokens_output": 0.000002,
-    "embedding_cost_per_1k": 0.0000001
+    "embedding_cost_per_1k": 0.0000001,
+    "ocr_cost_per_page": 0.0001
   },
   
   "security": {
-    "api_key": "MISTRAL_API_KEY",
+    "api_key_env": "MISTRAL_API_KEY",
     "store_key_locally": false,
     "mask_key_in_logs": true
   },
@@ -178,5 +225,11 @@
     "log_api_calls": false,
     "log_prompts": false,
     "log_responses": false
+  },
+  
+  "vault": {
+    "default_path": "~/vaults/knowledge_base",
+    "single_vault": true,
+    "description": "Configuration pour un vault unique centralisé"
   }
 }
