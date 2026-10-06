@@ -1,0 +1,404 @@
+{
+  "version": "1.0.0",
+  "description": "Configuration centralisée des 4 agents principaux pour OpenWebUI",
+  
+  "global": {
+    "api_base_url": "https://api.mistral.ai/v1",
+    "api_key_env": "MISTRAL_API_KEY",
+    "vault_path": "~/vaults/knowledge_base",
+    "timeout": 120,
+    "max_retries": 3
+  },
+  
+  "agents": {
+    "cleanup_agent": {
+      "name": "RAG Cleanup Agent",
+      "description": "Nettoie les documents avec Mistral OCR et prépare pour ingestion RAG",
+      "role": "Nettoyage et préparation des documents",
+      "icon": "🧹",
+      "color": "#4CAF50",
+      
+      "models": {
+        "ocr": "mistral-ocr-latest",
+        "cleanup": "mistral-small-latest",
+        "description": "mistral-small-latest"
+      },
+      
+      "features": {
+        "ocr": {
+          "enabled": true,
+          "max_file_size_mb": 100,
+          "supported_formats": ["pdf", "png", "jpg", "jpeg", "gif", "bmp", "webp"],
+          "auto_rotate": true,
+          "enhance_quality": true
+        },
+        "cleanup": {
+          "enabled": true,
+          "remove_headers": true,
+          "remove_footers": true,
+          "remove_page_numbers": true,
+          "remove_boilerplate": true,
+          "normalize_text": true,
+          "detect_language": true,
+          "min_text_length": 50
+        },
+        "structuring": {
+          "enabled": true,
+          "auto_sectioning": true,
+          "preserve_formatting": true,
+          "convert_tables": true,
+          "convert_lists": true
+        }
+      },
+      
+      "output": {
+        "cleaned_dir": "cleaned",
+        "text_format": "markdown",
+        "add_metadata": true,
+        "overwrite": false
+      },
+      
+      "openwebui": {
+        "command": "clean",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "string",
+            "required": true,
+            "description": "Chemin du fichier ou dossier à nettoyer"
+          },
+          {
+            "name": "output",
+            "type": "string",
+            "required": false,
+            "description": "Dossier de sortie (par défaut: cleaned/)"
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "default": "auto",
+            "enum": ["auto", "ocr_only", "cleanup_only", "both"],
+            "description": "Mode de traitement"
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "required": false,
+            "default": "auto",
+            "description": "Langue du document (auto, fr, en, etc.)"
+          }
+        ],
+        "examples": [
+          "clean raw/documents/article.pdf",
+          "clean raw/images/scan.jpg --mode ocr_only",
+          "clean raw/ --output cleaned_texts/"
+        ]
+      }
+    },
+    
+    "ingestion_agent": {
+      "name": "RAG Ingestion Agent",
+      "description": "Intègre les documents nettoyés dans le système RAG avec Mistral Embed",
+      "role": "Gestion et indexation des connaissances",
+      "icon": "📚",
+      "color": "#2196F3",
+      
+      "models": {
+        "llm": "mistral-large-latest",
+        "embedding": "mistral-embed",
+        "moderation": "shieldstral-latest"
+      },
+      
+      "features": {
+        "chunking": {
+          "enabled": true,
+          "chunk_size": 2000,
+          "chunk_overlap": 200,
+          "max_tokens": 8192,
+          "preserve_important": ["titles", "authors", "dates", "citations", "code", "formulas"]
+        },
+        "embedding": {
+          "enabled": true,
+          "batch_size": 32,
+          "normalize": true,
+          "dimension": 1024
+        },
+        "indexing": {
+          "enabled": true,
+          "use_bm25": true,
+          "use_embeddings": true,
+          "hybrid_method": "rrf",
+          "rrf_k": 60
+        },
+        "metadata": {
+          "enabled": true,
+          "extract": ["title", "author", "date", "source", "tags", "language"],
+          "auto_generate": true
+        }
+      },
+      
+      "output": {
+        "vault_dir": "wiki",
+        "sources_dir": "sources",
+        "entities_dir": "entities",
+        "concepts_dir": "concepts",
+        "update_index": true,
+        "log_operations": true
+      },
+      
+      "openwebui": {
+        "command": "ingest",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "string",
+            "required": true,
+            "description": "Chemin du fichier ou dossier à ingérer"
+          },
+          {
+            "name": "vault",
+            "type": "string",
+            "required": false,
+            "description": "Chemin du vault (par défaut: ~/vaults/knowledge_base)"
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "default": "full",
+            "enum": ["full", "text_only", "metadata_only"],
+            "description": "Mode d'ingestion"
+          },
+          {
+            "name": "preprocess",
+            "type": "boolean",
+            "required": false,
+            "default": true,
+            "description": "Prétraiter avant ingestion"
+          }
+        ],
+        "examples": [
+          "ingest cleaned/article.txt",
+          "ingest cleaned/ --vault ~/vaults/projet_x",
+          "ingest cleaned/article.txt --mode text_only"
+        ]
+      }
+    },
+    
+    "search_agent": {
+      "name": "RAG Search Agent",
+      "description": "Recherche optimisée dans le RAG avec Mistral Large et Embed",
+      "role": "Recherche et synthèse des connaissances",
+      "icon": "🔍",
+      "color": "#FF9800",
+      
+      "models": {
+        "llm": "mistral-large-latest",
+        "embedding": "mistral-embed"
+      },
+      
+      "features": {
+        "retrieval": {
+          "enabled": true,
+          "default_retriever": "hybrid",
+          "bm25": {
+            "k1": 1.5,
+            "b": 0.75,
+            "top_k": 50
+          },
+          "embeddings": {
+            "top_k": 10,
+            "similarity_threshold": 0.7
+          },
+          "hybrid": {
+            "method": "rrf",
+            "rrf_k": 60
+          }
+        },
+        "synthesis": {
+          "enabled": true,
+          "temperature": 0.4,
+          "max_tokens": 4096,
+          "citation_format": "[[page_name]]",
+          "auto_save": true,
+          "save_dir": "synthesis"
+        },
+        "reranking": {
+          "enabled": true,
+          "model": "mistral-small-latest",
+          "top_k": 5
+        }
+      },
+      
+      "output": {
+        "format": "markdown",
+        "include_citations": true,
+        "include_sources": true,
+        "include_confidence": true,
+        "max_results": 10
+      },
+      
+      "openwebui": {
+        "command": "search",
+        "parameters": [
+          {
+            "name": "query",
+            "type": "string",
+            "required": true,
+            "description": "Requête de recherche"
+          },
+          {
+            "name": "vault",
+            "type": "string",
+            "required": false,
+            "description": "Chemin du vault"
+          },
+          {
+            "name": "top_k",
+            "type": "integer",
+            "required": false,
+            "default": 5,
+            "min": 1,
+            "max": 20,
+            "description": "Nombre de résultats"
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "required": false,
+            "default": "hybrid",
+            "enum": ["hybrid", "bm25", "embeddings", "index"],
+            "description": "Mode de recherche"
+          },
+          {
+            "name": "save",
+            "type": "boolean",
+            "required": false,
+            "default": true,
+            "description": "Sauvegarder la réponse"
+          }
+        ],
+        "examples": [
+          "search \"Qu'est-ce que l'interprétabilité des LLM ?\"",
+          "search \"mécanisme d'attention\" --top_k 10",
+          "search \"comparaison transformers\" --mode hybrid --save false"
+        ]
+      }
+    },
+    
+    "health_agent": {
+      "name": "RAG Health Agent",
+      "description": "Vérifie la santé du système RAG et signale les problèmes",
+      "role": "Maintenance et diagnostic",
+      "icon": "🏥",
+      "color": "#F44336",
+      
+      "models": {
+        "llm": "mistral-small-latest",
+        "moderation": "shieldstral-latest"
+      },
+      
+      "features": {
+        "validation": {
+          "enabled": true,
+          "check_frontmatter": true,
+          "check_links": true,
+          "check_references": true,
+          "check_types": true
+        },
+        "analysis": {
+          "enabled": true,
+          "detect_contradictions": true,
+          "detect_orphans": true,
+          "detect_obsolete": true,
+          "check_coverage": true
+        },
+        "statistics": {
+          "enabled": true,
+          "count_pages": true,
+          "count_sources": true,
+          "count_entities": true,
+          "count_concepts": true,
+          "index_quality": true
+        },
+        "moderation": {
+          "enabled": true,
+          "block_list": ["hate", "harassment", "violence", "self-harm", "sexual", "illegal", "personal_data"],
+          "action": "flag"
+        }
+      },
+      
+      "output": {
+        "report_format": "markdown",
+        "include_statistics": true,
+        "include_issues": true,
+        "include_recommendations": true,
+        "severity_levels": ["critical", "warning", "info"],
+        "auto_fix": false
+      },
+      
+      "openwebui": {
+        "command": "health",
+        "parameters": [
+          {
+            "name": "vault",
+            "type": "string",
+            "required": false,
+            "description": "Chemin du vault à analyser"
+          },
+          {
+            "name": "checks",
+            "type": "string",
+            "required": false,
+            "default": "all",
+            "enum": ["all", "validation", "analysis", "statistics", "moderation"],
+            "description": "Types de vérifications"
+          },
+          {
+            "name": "fix",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Corriger automatiquement les problèmes"
+          },
+          {
+            "name": "format",
+            "type": "string",
+            "required": false,
+            "default": "full",
+            "enum": ["full", "summary", "json"],
+            "description": "Format du rapport"
+          }
+        ],
+        "examples": [
+          "health",
+          "health --vault ~/vaults/projet_x",
+          "health --checks validation --fix true",
+          "health --format summary"
+        ]
+      }
+    }
+  },
+  
+  "workflows": {
+    "full_pipeline": {
+      "name": "Pipeline Complet",
+      "description": "Nettoyage → Ingestion → Recherche en une seule commande",
+      "steps": [
+        {"agent": "cleanup_agent", "command": "clean {input}"},
+        {"agent": "ingestion_agent", "command": "ingest cleaned/{input}"},
+        {"agent": "search_agent", "command": "search \"{query}\""}
+      ],
+      "openwebui_command": "process"
+    },
+    "quick_search": {
+      "name": "Recherche Rapide",
+      "description": "Recherche directe sans ingestion",
+      "steps": [
+        {"agent": "search_agent", "command": "search \"{query}\" --mode index"}
+      ],
+      "openwebui_command": "quick"
+    }
+  }
+}
