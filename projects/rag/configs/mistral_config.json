@@ -55,10 +55,10 @@
   },
   
   "embeddings": {
-    "model": "codestral-embed",
+    "model": "mistral-embed",
     "dimension": 1024,
     "batch_size": 32,
-    "description": "Modèle d'embedding Mistral pour la recherche sémantique (codestral-embed)"
+    "description": "Modèle d'embedding Mistral pour la recherche sémantique (mistral-embed)"
   },
   
   "ocr": {
@@ -141,7 +141,7 @@
       "llm_model": "mistral-large-latest",
       "temperature": 0.2,
       "max_tokens": 16384,
-      "embedding_model": "codestral-embed",
+      "embedding_model": "mistral-embed",
       "ocr_agent": "OCRAgent",
       "preprocessing_agent": "PreprocessingAgent",
       "description": "Agent d'ingestion - OCR + prétraitement + création de pages"
@@ -150,7 +150,7 @@
       "llm_model": "mistral-large-latest",
       "temperature": 0.4,
       "max_tokens": 4096,
-      "embedding_model": "codestral-embed",
+      "embedding_model": "mistral-embed",
       "description": "Agent de requête - recherche + synthèse avec embeddings"
     },
     "WikiLinterAgent": {
@@ -176,7 +176,7 @@
       "top_k": 50
     },
     "embeddings": {
-      "model": "codestral-embed",
+      "model": "mistral-embed",
       "top_k": 10,
       "similarity_threshold": 0.7
     },

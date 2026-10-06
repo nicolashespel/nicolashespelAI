@@ -1,4 +1,4 @@
-# Dépendances principales pour le système RAG Wiki
+# Dépendances simplifiées pour le système RAG Wiki
 # Python 3.12+ requis
 
 # Pour le parsing PDF (optionnel)
@@ -11,7 +11,7 @@ html5lib>=1.1
 # Pour l'implémentation BM25 (optionnel - implémentation incluse)
 rank-bm25>=0.2.2
 
-# Pour les embeddings (optionnel - utilise Mistral API)
+# Pour les embeddings (optionnel - nécessite Mistral API)
 # sentence-transformers>=2.2.0
 # torch>=2.0.0
 
@@ -26,3 +26,6 @@ httpx>=0.25.0
 
 # Pour les opérations async
 anyio>=4.0.0
+
+# Pour la manipulation de chemins
+pathlib>=1.0.1

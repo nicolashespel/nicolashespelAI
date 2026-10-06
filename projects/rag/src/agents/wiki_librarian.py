@@ -1,7 +1,7 @@
 """
 Agent Wiki Librarian pour le système RAG Wiki.
 
-Utilise codestral-embed pour les embeddings et Mistral API pour les requêtes.
+Utilise mistral-embed pour les embeddings et Mistral API pour les requêtes.
 """
 
 import asyncio
@@ -33,7 +33,7 @@ class WikiLibrarianAgent(BaseAgent):
     - Recherche dans l'index et les pages
     - Synthèse des réponses avec citations
     - Sauvegarde des réponses utiles
-    - Utilisation de codestral-embed pour les embeddings
+    - Utilisation de mistral-embed pour les embeddings
     """
     
     def __init__(
@@ -66,7 +66,7 @@ class WikiLibrarianAgent(BaseAgent):
         self.mistral_config = self._load_mistral_config()
         
         # Configuration des embeddings
-        self.embedding_model = self.mistral_config.get("embeddings", {}).get("model", "codestral-embed")
+        self.embedding_model = self.mistral_config.get("embeddings", {}).get("model", "mistral-embed")
         self.embedding_dimension = self.mistral_config.get("embeddings", {}).get("dimension", 1024)
         
         # Configuration LLM
@@ -98,7 +98,7 @@ class WikiLibrarianAgent(BaseAgent):
                 return json.load(f)
         else:
             return {
-                "embeddings": {"model": "codestral-embed", "dimension": 1024},
+                "embeddings": {"model": "mistral-embed", "dimension": 1024},
                 "agents": {"WikiLibrarianAgent": {"llm_model": "mistral-large-latest"}},
                 "global": {"api_base_url": "https://api.mistral.ai/v1"},
             }
@@ -361,7 +361,7 @@ sources: {citations}
         text: str,
     ) -> List[float]:
         """
-        Générer des embeddings pour un texte via codestral-embed.
+        Générer des embeddings pour un texte via mistral-embed.
         
         Args:
             text: Texte à embedder.

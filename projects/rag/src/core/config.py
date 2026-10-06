@@ -27,7 +27,7 @@ class WikiConfig(BaseModel):
     
     # Configuration LLM
     llm_model: str = Field(
-        default="claude-3-5-sonnet-20241022",
+        default="mistral-large-latest",
         description="Modèle LLM à utiliser"
     )
     llm_api_key: Optional[str] = Field(
@@ -45,15 +45,15 @@ class WikiConfig(BaseModel):
     
     # Configuration Embeddings
     embedding_model: str = Field(
-        default="text-embedding-3-small",
+        default="mistral-embed",
         description="Modèle d'embedding à utiliser"
     )
     embedding_api_key: Optional[str] = Field(
         default=None,
-        description="Clé API pour les embeddings"
+        description="Clé API pour les embeddings (utilise la même que LLM si None)"
     )
     embedding_dimension: int = Field(
-        default=1536,
+        default=1024,
         description="Dimension des embeddings"
     )
     
@@ -120,11 +120,11 @@ class WikiConfig(BaseModel):
         """Charger la configuration depuis les variables d'environnement."""
         return cls(
             vault_path=Path(os.getenv("WIKI_VAULT_PATH", "vault")),
-            llm_model=os.getenv("WIKI_LLM_MODEL", "claude-3-5-sonnet-20241022"),
+            llm_model=os.getenv("WIKI_LLM_MODEL", "mistral-large-latest"),
             llm_api_key=os.getenv("WIKI_LLM_API_KEY"),
             llm_temperature=float(os.getenv("WIKI_LLM_TEMPERATURE", "0.7")),
             llm_max_tokens=int(os.getenv("WIKI_LLM_MAX_TOKENS", "4096")),
-            embedding_model=os.getenv("WIKI_EMBEDDING_MODEL", "text-embedding-3-small"),
+            embedding_model=os.getenv("WIKI_EMBEDDING_MODEL", "mistral-embed"),
             embedding_api_key=os.getenv("WIKI_EMBEDDING_API_KEY"),
             log_level=os.getenv("WIKI_LOG_LEVEL", "INFO"),
             tool=os.getenv("WIKI_TOOL", "all"),
