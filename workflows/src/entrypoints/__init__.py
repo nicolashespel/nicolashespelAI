@@ -1,1 +1,0 @@
-"""Points d entrée du worker."""
