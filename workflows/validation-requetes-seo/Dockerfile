@@ -7,7 +7,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY pyproject.toml ./
 COPY src ./src
 
-RUN pip install --no-cache-dir uv \
-    && uv pip install --system --no-cache -r pyproject.toml
+RUN pip install --no-cache-dir "mistralai-workflows>=3.10" "httpx>=0.27"
 
 CMD ["python", "-m", "src.entrypoints.worker"]
