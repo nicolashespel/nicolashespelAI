@@ -2,11 +2,19 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1
 
 COPY pyproject.toml ./
 COPY src ./src
 
-RUN pip install --no-cache-dir "mistralai-workflows>=3.10" "httpx>=0.27"
+RUN pip install --no-cache-dir uv \
+    && uv venv /app/.venv \
+    && uv pip install --python /app/.venv/bin/python \
+        "mistralai>=1.0.0" \
+        "mistralai-workflows[mistralai]>=0.1.0" \
+        "pydantic>=2.0.0" \
+        "httpx>=0.27"
 
-CMD ["python", "-m", "src.entrypoints.worker"]
+ENV PATH="/app/.venv/bin:$PATH"
+
+CMD ["python", "src/entrypoints/worker.py"]
